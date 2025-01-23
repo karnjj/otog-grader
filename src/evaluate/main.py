@@ -5,7 +5,7 @@ from DTO.evaluate import EvaluateData
 from DTO.result import ResultDTO
 
 from constants.osDotEnv import osEnv
-from constants.Enums import EvaluateMode
+from constants.Enums import EvaluateMode, SubmissionStatus
 
 from evaluate import classic, codeforces
 from evaluate.verdict.main import getJudgeType
@@ -44,7 +44,7 @@ def start(submission: SubmissionDTO, srcPath: str, isoPath, useControlGroup:bool
         problemTaskData = subtask.compile(subContent)
     except Exception as e:
         errorLogging.writeSubtaskErrorLog(submission, str(e))
-        return ResultDTO(evaData.submission.id, "Subtask Error", 0, 0, 0, str(e))
+        return ResultDTO(evaData.submission.id, "Subtask Error", 0, 0, 0, str(e), SubmissionStatus.judgeError, [])
 
     # ? start evaluate
     if evaMode == EvaluateMode.codeforces:

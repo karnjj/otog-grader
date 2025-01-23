@@ -4,6 +4,7 @@ from constants.colors import colors
 from .dbInit import DB
 from datetime import datetime
 import traceback
+import json
 
 db = DB()
 
@@ -69,8 +70,8 @@ def getQueue():
 
 
 def updateRunningInCase(resultId, case):
-    sql = """UPDATE submission SET result = %s, "updateDate" = %s, status = 'grading' WHERE id = %s"""
-    val = (f"Running in testcase {case+1}", datetime.now(), str(resultId))
+    sql = """UPDATE submission SET "updateDate" = %s, status = 'grading' WHERE id = %s"""
+    val = (datetime.now(), str(resultId))
     cur = db.query(sql, val)
     cur.close()
     db.update()
@@ -79,12 +80,31 @@ def updateRunningInCase(resultId, case):
 def updateResult(result: ResultDTO):
     # TODO : Imprement memUse in DB
     currentDate = datetime.now()
-    sql = """UPDATE submission SET result = %s, score = %s, "timeUsed" = %s, 
-            status = %s, errmsg = %s, "updateDate" = %s WHERE id = %s"""
-    status = "accept" if all(
-        c in "P[]()" for c in result.result) or result.result == "Accepted" else "reject"
-    val = (result.result, result.score, int(result.sumTime), status,
-           result.errmsg, currentDate, str(result.id))
-    cur = db.query(sql, val)
+    sql = ["""UPDATE submission SET status = %s, "updateDate" = %s WHERE id = %s"""]
+    val = [result.status.value, currentDate, result.id]
+    sql += ["""INSERT INTO "submissionResult" ("submissionId", result, score, "timeUsed", "memUsed", errmsg)
+            VALUES (%s, %s, %s, %s, %s, %s) RETURNING id"""]
+    val += [result.id, result.result, result.score, result.sumTime, result.memUse, result.errmsg]
+    cur = db.query(";".join(sql), tuple(val))
+    submissionResultId = cur.fetchone()
     cur.close()
+    subtaskIndex = 0
+    for subtask in result.fullResult:
+        subtaskIndex += 1
+        sql = ["""INSERT INTO "subtaskResult" ("submissionResultId", "subtaskIndex", score, "fullScore")
+                VALUES (%s, %s, %s, %s) RETURNING id"""]
+        val = [submissionResultId, subtaskIndex, subtask.score, subtask.fullScore]
+        cur = db.query(";".join(sql), tuple(val))
+        subtaskResultId = cur.fetchone()
+        cur.close()
+        testcaseIndex = 0
+        sql = []
+        val = []
+        for verdict in subtask.verdicts:
+            testcaseIndex += 1
+            sql += ["""INSERT INTO verdict ("subtaskId", "testcaseIndex", status, percent, "timeUsed", "memUsed")
+                    VALUES (%s, %s, %s, %s, %s, %s)"""]
+            val += [subtaskResultId, testcaseIndex, verdict.status.value, verdict.percent, verdict.timeUse, verdict.memUse]
+        cur = db.query(";".join(sql), tuple(val))
+        cur.close()
     db.update()

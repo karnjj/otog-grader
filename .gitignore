@@ -172,3 +172,5 @@ source
 command.yaml
 dummy.py
 Logging/internalError/
+
+.DS_Store

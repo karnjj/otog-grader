@@ -69,7 +69,7 @@ def excute(problemPath: str, testcase: int, timeLimit: float, memoryLimit: int, 
         if useControlGroup:
             memUse = int(isoResult["cg-mem"])  # TODO : CHECK IS IT RIGHT?
         else:
-            memUse = -1
+            memUse = int(isoResult["max-rss"])
             
         os.system("chmod 500 env")
         os.system("chmod 775 env/output.txt")

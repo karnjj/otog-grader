@@ -15,14 +15,22 @@ class JudgeType(Enum):
 
 
 class VerdictStatus(Enum):
+    accept = "ACCEPTED"
+    partial = "PARTIAL"
+    reject = "REJECTED"
+
+    timeExceed = "TIME_LIMIT_EXCEEDED"
+    runtimeErr = "RUNTIME_ERROR"
+
+    skip = "SKIPPED"
+
+    problemErr = "PROBLEM_ERROR"
+    internalErr = "INTERNAL_ERROR"
+
+class SubmissionStatus(Enum):
     accept = "accept"
-    partial = "partial"
     reject = "reject"
-
-    timeExceed = "time limit exceed"
-    runtimeErr = "runtime error"
-
-    skip = "skip"
-
-    problemErr = "problem error"
-    internalErr = "internal error"
+    waiting = "waiting"
+    grading = "grading"
+    compileError = "compileError"
+    judgeError = "judgeError"
